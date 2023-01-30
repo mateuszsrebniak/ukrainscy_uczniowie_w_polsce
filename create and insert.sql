@@ -188,7 +188,8 @@ SELECT
 	,	CONVERT(INT, id_klasy)
 	,	CONVERT(INT, liczba_oddzialow)
 	,	CONVERT(INT, liczba_uczniow)
-FROM uczniowie_wg_dat_csv;
+FROM uczniowie_wg_dat_csv
+WHERE CONVERT(DATETIME, stan_na_dzien, 103);
 
 -- wstawienie do tabeli uczniowie_ukr kolejnych danych
 
@@ -197,3 +198,21 @@ DROP TABLE uczniowie_wg_dat_csv;
 
 DROP TABLE uczniowie_z_ukrainy;
 -- tabela spe³ni³a swoje zadanie, wiêc mo¿na j¹ usun¹æ
+
+INSERT INTO uczniowie_ukr (id_pozycji, stan_na_dzien, powiat, rodzaj_placowki, publicznosc, typ_podmiotu, typ_oddzialu,
+			klasa, liczba_oddzialow, liczba_uczniow)
+SELECT 
+		(SELECT MAX(id_pozycji) FROM uczniowie_ukr) + ROW_NUMBER() OVER (ORDER BY powiat)
+	,	CONVERT(DATETIME, stan_na_dzien, 103)
+	,	CONVERT(INT, id_pow)
+	,	CONVERT(INT, id_rodz_plac)
+	,	CONVERT(INT, id_publ)
+	,	CONVERT(INT, id_typ_podmiotu)
+	,	CONVERT(INT, id_typ_oddzialu)
+	,	CONVERT(INT, id_klasy)
+	,	CONVERT(INT, liczba_oddzialow)
+	,	CONVERT(INT, liczba_uczniow)
+FROM uczniowie_wg_dat_csv
+WHERE CONVERT(DATETIME, stan_na_dzien, 103) > (SELECT MAX(stan_na_dzien) FROM uczniowie_ukr);
+
+-- wstawienie do tabeli uczniowie_ukr kolejnych danych

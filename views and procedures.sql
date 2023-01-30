@@ -166,4 +166,31 @@ w których ucz¹ siê ukraiñscy uczniowie, aktualna liczba uczniów przypadaj¹cych n
 EXEC top_powiaty @top = 10, @sortowanie = 'a'; -- przyk³ad wywo³ania procedury.
 ------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
-Select * from placowki_pelne_dane
+CREATE OR ALTER PROCEDURE wstaw_dane
+@tabela VARCHAR(100) -- nazwa tabeli, z której chcemy wyci¹gn¹æ dane
+AS
+BEGIN
+DECLARE
+@zapytanie NVARCHAR(1000)
+SET @zapytanie = 
+'INSERT INTO uczniowie_ukr (id_pozycji, stan_na_dzien, powiat, rodzaj_placowki, publicznosc, typ_podmiotu, typ_oddzialu,
+			klasa, liczba_oddzialow, liczba_uczniow)
+SELECT 
+		(SELECT MAX(id_pozycji) FROM uczniowie_ukr) + ROW_NUMBER() OVER (ORDER BY powiat)
+	,	CONVERT(DATETIME, stan_na_dzien, 103)
+	,	CONVERT(INT, id_pow)
+	,	CONVERT(INT, id_rodz_plac)
+	,	CONVERT(INT, id_publ)
+	,	CONVERT(INT, id_typ_podmiotu)
+	,	CONVERT(INT, id_typ_oddzialu)
+	,	CONVERT(INT, id_klasy)
+	,	CONVERT(INT, liczba_oddzialow)
+	,	CONVERT(INT, liczba_uczniow)
+FROM' + @tabela +
+'WHERE CONVERT(DATETIME, stan_na_dzien, 103) > (SELECT MAX(stan_na_dzien) FROM uczniowie_ukr)'
+EXEC sp_executesql @zapytanie
+END;
+/*utworzenie procedury automatyzuj¹cej wprowadzanie nowych danych do tabeli 'uczniowie_ukr'.
+Jako parametr procedura przyjmuje nazwê tabeli, z której chcemy pozyskaæ nowe dane*/
+
+EXEC wstaw_dane @tabela = '[dbo].[uczniowie_wg_dat_csv]'; -- przyk³ad wywo³ania procedury.
